@@ -28,8 +28,8 @@ const Dashboard: React.FC = () => {
     });
   }, [state.timeEntries, schoolYearStart]);
 
-  // Calculate stats by child
-  const childStats = useMemo(() => {
+  // Calculate stats by student
+  const studentStats = useMemo(() => {
     const stats: Record<string, {
       totalMinutes: number;
       subjects: Record<string, number>;
@@ -41,8 +41,8 @@ const Dashboard: React.FC = () => {
     }> = {};
 
     schoolYearEntries.forEach(entry => {
-      if (!stats[entry.childId]) {
-        stats[entry.childId] = {
+      if (!stats[entry.studentId]) {
+        stats[entry.studentId] = {
           totalMinutes: 0,
           subjects: {},
           entryCount: 0,
@@ -57,27 +57,27 @@ const Dashboard: React.FC = () => {
       const category = subject?.category || 'Core';
       const location = entry.location || 'Home';
 
-      stats[entry.childId].totalMinutes += entry.duration;
-      stats[entry.childId].entryCount += 1;
+      stats[entry.studentId].totalMinutes += entry.duration;
+      stats[entry.studentId].entryCount += 1;
 
       // Track by category
       if (category === 'Core') {
-        stats[entry.childId].coreMinutes += entry.duration;
+        stats[entry.studentId].coreMinutes += entry.duration;
       } else {
-        stats[entry.childId].nonCoreMinutes += entry.duration;
+        stats[entry.studentId].nonCoreMinutes += entry.duration;
       }
 
       // Track by location
       if (location === 'Home') {
-        stats[entry.childId].homeMinutes += entry.duration;
+        stats[entry.studentId].homeMinutes += entry.duration;
       } else {
-        stats[entry.childId].awayMinutes += entry.duration;
+        stats[entry.studentId].awayMinutes += entry.duration;
       }
 
-      if (!stats[entry.childId].subjects[entry.subjectId]) {
-        stats[entry.childId].subjects[entry.subjectId] = 0;
+      if (!stats[entry.studentId].subjects[entry.subjectId]) {
+        stats[entry.studentId].subjects[entry.subjectId] = 0;
       }
-      stats[entry.childId].subjects[entry.subjectId] += entry.duration;
+      stats[entry.studentId].subjects[entry.subjectId] += entry.duration;
     });
 
     return stats;
@@ -87,13 +87,13 @@ const Dashboard: React.FC = () => {
     return schoolYearEntries.reduce((sum, entry) => sum + entry.duration, 0);
   }, [schoolYearEntries]);
 
-  const getChildName = (childId: string) => {
-    const child = state.children.find(c => c.id === childId);
+  const getStudentName = (studentId: string) => {
+    const child = state.students.find(c => c.id === studentId);
     return child?.name || 'Unknown Child';
   };
 
-  const getChildRequirements = (childId: string) => {
-    const child = state.children.find(c => c.id === childId);
+  const getStudentRequirements = (studentId: string) => {
+    const child = state.students.find(c => c.id === studentId);
     return child?.requirements;
   };
 
@@ -120,7 +120,7 @@ const Dashboard: React.FC = () => {
     return (minutes / 60).toFixed(1);
   };
 
-  const hasData = state.children.length > 0 && schoolYearEntries.length > 0;
+  const hasData = state.students.length > 0 && schoolYearEntries.length > 0;
 
   return (
     <div>
@@ -131,9 +131,9 @@ const Dashboard: React.FC = () => {
 
       {!hasData && (
         <div className="card">
-          {state.children.length === 0 ? (
+          {state.students.length === 0 ? (
             <p className="text-muted text-center">
-              Welcome! Get started by adding children and subjects, then log some time entries.
+              Welcome! Get started by adding students and subjects, then log some time entries.
             </p>
           ) : (
             <p className="text-muted text-center">
@@ -145,21 +145,21 @@ const Dashboard: React.FC = () => {
 
       {hasData && (
         <>
-          {/* Child Cards */}
+          {/* Student Cards */}
           <div className="grid grid-2">
-            {state.children.map((child) => {
-              const stats = childStats[child.id];
+            {state.students.map((student) => {
+              const stats = studentStats[student.id];
               const hasStats = stats && stats.totalMinutes > 0;
 
               return (
-                <div key={child.id} className="card">
-                  <div style={{ borderLeft: '4px solid #007bff', paddingLeft: '15px', marginBottom: '15px' }}>
+                <div key={student.id} className="card">
+                  <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '15px', marginBottom: '15px' }}>
                     <h3 style={{ marginBottom: '5px', color: 'var(--text-primary)' }}>
-                      {child.name}
+                      {student.name}
                     </h3>
-                    {child.grade && (
+                    {student.grade && (
                       <p className="text-muted" style={{ fontSize: '14px', margin: 0 }}>
-                        Grade: {child.grade}
+                        Grade: {student.grade}
                       </p>
                     )}
                   </div>
@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
                     <>
                       {/* Progress Tracking Section */}
                       {(() => {
-                        const requirements = getChildRequirements(child.id);
+                        const requirements = getStudentRequirements(student.id);
                         const hasRequirements = requirements && (
                           requirements.totalHours ||
                           requirements.coreHours ||
@@ -194,7 +194,7 @@ const Dashboard: React.FC = () => {
                             actual,
                             required,
                             percentage,
-                            color: '#007bff'
+                            color: 'var(--accent-primary)'
                           });
                         }
 
@@ -207,7 +207,7 @@ const Dashboard: React.FC = () => {
                             actual,
                             required,
                             percentage,
-                            color: '#007bff'
+                            color: 'var(--accent-secondary)'
                           });
                         }
 
@@ -220,7 +220,7 @@ const Dashboard: React.FC = () => {
                             actual,
                             required,
                             percentage,
-                            color: '#6c757d'
+                            color: 'var(--accent-warning)'
                           });
                         }
 
@@ -233,7 +233,7 @@ const Dashboard: React.FC = () => {
                             actual,
                             required,
                             percentage,
-                            color: '#28a745'
+                            color: 'var(--accent-success)'
                           });
                         }
 
@@ -246,7 +246,7 @@ const Dashboard: React.FC = () => {
                             actual,
                             required,
                             percentage,
-                            color: '#17a2b8'
+                            color: 'var(--accent-info)'
                           });
                         }
 
@@ -298,7 +298,7 @@ const Dashboard: React.FC = () => {
                       })()}
 
                       {/* Divider */}
-                      {getChildRequirements(child.id) && (
+                      {getStudentRequirements(student.id) && (
                         <div style={{
                           borderTop: '1px solid var(--border-color)',
                           marginBottom: '20px'
@@ -315,7 +315,7 @@ const Dashboard: React.FC = () => {
                             padding: '12px',
                             background: 'var(--bg-tertiary)',
                             borderRadius: '8px',
-                            borderLeft: '4px solid #007bff'
+                            borderLeft: '4px solid var(--accent-secondary)'
                           }}>
                             <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                               Core
@@ -331,7 +331,7 @@ const Dashboard: React.FC = () => {
                             padding: '12px',
                             background: 'var(--bg-tertiary)',
                             borderRadius: '8px',
-                            borderLeft: '4px solid #6c757d'
+                            borderLeft: '4px solid var(--accent-warning)'
                           }}>
                             <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                               Non-Core
@@ -356,7 +356,7 @@ const Dashboard: React.FC = () => {
                             padding: '12px',
                             background: 'var(--bg-tertiary)',
                             borderRadius: '8px',
-                            borderLeft: '4px solid #28a745'
+                            borderLeft: '4px solid var(--accent-success)'
                           }}>
                             <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                               Home
@@ -372,7 +372,7 @@ const Dashboard: React.FC = () => {
                             padding: '12px',
                             background: 'var(--bg-tertiary)',
                             borderRadius: '8px',
-                            borderLeft: '4px solid #17a2b8'
+                            borderLeft: '4px solid var(--accent-info)'
                           }}>
                             <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                               Away

@@ -8,7 +8,7 @@ const TimeTracker: React.FC = () => {
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   const [keepFormOpen, setKeepFormOpen] = useState(false);
   const [formData, setFormData] = useState({
-    childId: '',
+    studentId: '',
     subjectId: '',
     date: new Date().toISOString().split('T')[0],
     duration: '',
@@ -18,10 +18,10 @@ const TimeTracker: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.childId || !formData.subjectId || !formData.duration) return;
+    if (!formData.studentId || !formData.subjectId || !formData.duration) return;
 
     const entryData = {
-      childId: formData.childId,
+      studentId: formData.studentId,
       subjectId: formData.subjectId,
       date: new Date(formData.date),
       duration: parseInt(formData.duration),
@@ -47,7 +47,7 @@ const TimeTracker: React.FC = () => {
     if (editingEntry || !keepFormOpen) {
       // Full reset when editing or not keeping form open
       setFormData({
-        childId: '',
+        studentId: '',
         subjectId: '',
         date: new Date().toISOString().split('T')[0],
         duration: '',
@@ -56,7 +56,7 @@ const TimeTracker: React.FC = () => {
       });
       setShowForm(false);
     } else {
-      // Keep child and date, clear other fields
+      // Keep student and date, clear other fields
       setFormData({
         ...formData,
         subjectId: '',
@@ -70,7 +70,7 @@ const TimeTracker: React.FC = () => {
   const handleEdit = (entry: TimeEntry) => {
     setEditingEntry(entry);
     setFormData({
-      childId: entry.childId,
+      studentId: entry.studentId,
       subjectId: entry.subjectId,
       date: entry.date.toISOString().split('T')[0],
       duration: entry.duration.toString(),
@@ -88,7 +88,7 @@ const TimeTracker: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      childId: '',
+      studentId: '',
       subjectId: '',
       date: new Date().toISOString().split('T')[0],
       duration: '',
@@ -100,9 +100,9 @@ const TimeTracker: React.FC = () => {
     setShowForm(false);
   };
 
-  const getChildName = (childId: string) => {
-    const child = state.children.find(c => c.id === childId);
-    return child?.name || 'Unknown Child';
+  const getStudentName = (studentId: string) => {
+    const student = state.students.find(s => s.id === studentId);
+    return student?.name || 'Unknown Student';
   };
 
   const getSubjectName = (subjectId: string) => {
@@ -128,7 +128,7 @@ const TimeTracker: React.FC = () => {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  const canAddEntry = state.children.length > 0 && state.subjects.length > 0;
+  const canAddEntry = state.students.length > 0 && state.subjects.length > 0;
 
   return (
     <div className="card">
@@ -138,7 +138,7 @@ const TimeTracker: React.FC = () => {
           className="btn btn-primary" 
           onClick={() => setShowForm(true)}
           disabled={!canAddEntry}
-          title={!canAddEntry ? 'Add children and subjects first' : ''}
+          title={!canAddEntry ? 'Add students and subjects first' : ''}
         >
           Log Time
         </button>
@@ -147,7 +147,7 @@ const TimeTracker: React.FC = () => {
       {!canAddEntry && (
         <div style={{ padding: '15px', background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', borderRadius: '4px', marginBottom: '20px' }}>
           <p className="text-muted mb-2">
-            <strong>Getting Started:</strong> You need to add at least one child and one subject before you can start tracking time.
+            <strong>Getting Started:</strong> You need to add at least one student and one subject before you can start tracking time.
           </p>
         </div>
       )}
@@ -157,17 +157,17 @@ const TimeTracker: React.FC = () => {
           <h3>{editingEntry ? 'Edit Time Entry' : 'Log New Time Entry'}</h3>
           <div className="grid grid-2">
             <div className="form-group">
-              <label>Child</label>
+              <label>Student</label>
               <select
                 className="form-control"
-                value={formData.childId}
-                onChange={(e) => setFormData({ ...formData, childId: e.target.value })}
+                value={formData.studentId}
+                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
                 required
               >
-                <option value="">Select a child</option>
-                {state.children.map((child) => (
-                  <option key={child.id} value={child.id}>
-                    {child.name}
+                <option value="">Select a student</option>
+                {state.students.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.name}
                   </option>
                 ))}
               </select>
@@ -241,7 +241,7 @@ const TimeTracker: React.FC = () => {
                   onChange={(e) => setKeepFormOpen(e.target.checked)}
                   style={{ marginRight: '8px' }}
                 />
-                Log another subject for this child and date
+                Log another subject for this student and date
               </label>
             </div>
           )}
@@ -263,7 +263,7 @@ const TimeTracker: React.FC = () => {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Child</th>
+              <th>Student</th>
               <th>Subject</th>
               <th>Duration</th>
               <th>Location</th>
@@ -275,7 +275,7 @@ const TimeTracker: React.FC = () => {
             {sortedEntries.map((entry) => (
               <tr key={entry.id}>
                 <td>{entry.date.toLocaleDateString()}</td>
-                <td>{getChildName(entry.childId)}</td>
+                <td>{getStudentName(entry.studentId)}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div

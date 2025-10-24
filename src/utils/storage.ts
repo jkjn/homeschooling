@@ -3,7 +3,7 @@ import { AppState } from '../types';
 const STORAGE_KEY = 'homeschool-tracker-data';
 
 export const defaultState: AppState = {
-  children: [],
+  students: [],
   subjects: [],
   timeEntries: []
 };
@@ -15,12 +15,15 @@ export const loadState = (): AppState => {
       return defaultState;
     }
     const parsed = JSON.parse(serializedState);
-    
+
+    // Migrate old "children" field to "students"
+    const studentsData = parsed.students || parsed.children || [];
+
     // Convert date strings back to Date objects and migrate old data
     return {
-      children: parsed.children.map((child: any) => ({
-        ...child,
-        createdAt: new Date(child.createdAt)
+      students: studentsData.map((student: any) => ({
+        ...student,
+        createdAt: new Date(student.createdAt)
       })),
       subjects: parsed.subjects.map((subject: any) => ({
         ...subject,
@@ -29,6 +32,8 @@ export const loadState = (): AppState => {
       })),
       timeEntries: parsed.timeEntries.map((entry: any) => ({
         ...entry,
+        // Migrate old "childId" to "studentId"
+        studentId: entry.studentId || entry.childId,
         date: new Date(entry.date),
         startTime: entry.startTime ? new Date(entry.startTime) : undefined,
         endTime: entry.endTime ? new Date(entry.endTime) : undefined,

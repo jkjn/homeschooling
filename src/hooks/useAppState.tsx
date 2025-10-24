@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { AppState, Child, Subject, TimeEntry } from '../types';
+import { AppState, Student, Subject, TimeEntry } from '../types';
 import { loadState, saveState, generateId } from '../utils/storage';
 
 type AppAction =
-  | { type: 'ADD_CHILD'; child: Omit<Child, 'id' | 'createdAt'> }
-  | { type: 'UPDATE_CHILD'; id: string; updates: Partial<Child> }
-  | { type: 'DELETE_CHILD'; id: string }
+  | { type: 'ADD_STUDENT'; student: Omit<Student, 'id' | 'createdAt'> }
+  | { type: 'UPDATE_STUDENT'; id: string; updates: Partial<Student> }
+  | { type: 'DELETE_STUDENT'; id: string }
   | { type: 'ADD_SUBJECT'; subject: Omit<Subject, 'id' | 'createdAt'> }
   | { type: 'UPDATE_SUBJECT'; id: string; updates: Partial<Subject> }
   | { type: 'DELETE_SUBJECT'; id: string }
@@ -15,27 +15,27 @@ type AppAction =
 
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
-    case 'ADD_CHILD':
+    case 'ADD_STUDENT':
       return {
         ...state,
-        children: [...state.children, {
-          ...action.child,
+        students: [...state.students, {
+          ...action.student,
           id: generateId(),
           createdAt: new Date()
         }]
       };
-    case 'UPDATE_CHILD':
+    case 'UPDATE_STUDENT':
       return {
         ...state,
-        children: state.children.map(child =>
-          child.id === action.id ? { ...child, ...action.updates } : child
+        students: state.students.map(student =>
+          student.id === action.id ? { ...student, ...action.updates } : student
         )
       };
-    case 'DELETE_CHILD':
+    case 'DELETE_STUDENT':
       return {
         ...state,
-        children: state.children.filter(child => child.id !== action.id),
-        timeEntries: state.timeEntries.filter(entry => entry.childId !== action.id)
+        students: state.students.filter(student => student.id !== action.id),
+        timeEntries: state.timeEntries.filter(entry => entry.studentId !== action.id)
       };
     case 'ADD_SUBJECT':
       return {

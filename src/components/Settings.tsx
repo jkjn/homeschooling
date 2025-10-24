@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
-import { Child } from '../types';
+import { Student } from '../types';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useAppState();
-  const [editingChild, setEditingChild] = useState<Child | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [requirements, setRequirements] = useState({
     totalHours: '',
     coreHours: '',
@@ -20,23 +20,23 @@ const Settings: React.FC = () => {
     awayHours: ''
   });
 
-  const handleEdit = (child: Child) => {
-    setEditingChild(child);
+  const handleEdit = (student: Student) => {
+    setEditingStudent(student);
     setRequirements({
-      totalHours: child.requirements?.totalHours?.toString() || '',
-      coreHours: child.requirements?.coreHours?.toString() || '',
-      nonCoreHours: child.requirements?.nonCoreHours?.toString() || '',
-      homeHours: child.requirements?.homeHours?.toString() || '',
-      awayHours: child.requirements?.awayHours?.toString() || ''
+      totalHours: student.requirements?.totalHours?.toString() || '',
+      coreHours: student.requirements?.coreHours?.toString() || '',
+      nonCoreHours: student.requirements?.nonCoreHours?.toString() || '',
+      homeHours: student.requirements?.homeHours?.toString() || '',
+      awayHours: student.requirements?.awayHours?.toString() || ''
     });
   };
 
   const handleSave = () => {
-    if (!editingChild) return;
+    if (!editingStudent) return;
 
     dispatch({
       type: 'UPDATE_CHILD',
-      id: editingChild.id,
+      id: editingStudent.id,
       updates: {
         requirements: {
           totalHours: requirements.totalHours ? parseInt(requirements.totalHours) : undefined,
@@ -48,7 +48,7 @@ const Settings: React.FC = () => {
       }
     });
 
-    setEditingChild(null);
+    setEditingStudent(null);
     setRequirements({
       totalHours: '',
       coreHours: '',
@@ -59,7 +59,7 @@ const Settings: React.FC = () => {
   };
 
   const handleCancel = () => {
-    setEditingChild(null);
+    setEditingStudent(null);
     setRequirements({
       totalHours: '',
       coreHours: '',
@@ -70,7 +70,7 @@ const Settings: React.FC = () => {
   };
 
   const handleApplyGlobalRequirements = () => {
-    if (state.children.length === 0) return;
+    if (state.students.length === 0) return;
 
     const reqObj = {
       totalHours: globalRequirements.totalHours ? parseInt(globalRequirements.totalHours) : undefined,
@@ -80,11 +80,11 @@ const Settings: React.FC = () => {
       awayHours: globalRequirements.awayHours ? parseInt(globalRequirements.awayHours) : undefined
     };
 
-    // Apply to all children
-    state.children.forEach(child => {
+    // Apply to all students
+    state.students.forEach(student => {
       dispatch({
-        type: 'UPDATE_CHILD',
-        id: child.id,
+        type: 'UPDATE_STUDENT',
+        id: student.id,
         updates: {
           requirements: reqObj
         }
@@ -115,9 +115,9 @@ const Settings: React.FC = () => {
           Set requirements once and apply to all students at the same time.
         </p>
 
-        {state.children.length === 0 ? (
+        {state.students.length === 0 ? (
           <p className="text-muted text-center">
-            No children added yet. Add children first to set requirements.
+            No students added yet. Add students first to set requirements.
           </p>
         ) : (
           <>
@@ -201,9 +201,9 @@ const Settings: React.FC = () => {
           Override global requirements or customize requirements for specific students.
         </p>
 
-        {state.children.length === 0 ? (
+        {state.students.length === 0 ? (
           <p className="text-muted text-center">
-            No children added yet. Add children first to configure their requirements.
+            No students added yet. Add students first to configure their requirements.
           </p>
         ) : (
           <table className="table">
@@ -220,19 +220,19 @@ const Settings: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {state.children.map((child) => (
-                <tr key={child.id}>
-                  <td>{child.name}</td>
-                  <td>{child.grade || '-'}</td>
-                  <td>{child.requirements?.totalHours || '-'}</td>
-                  <td>{child.requirements?.coreHours || '-'}</td>
-                  <td>{child.requirements?.nonCoreHours || '-'}</td>
-                  <td>{child.requirements?.homeHours || '-'}</td>
-                  <td>{child.requirements?.awayHours || '-'}</td>
+              {state.students.map((student) => (
+                <tr key={student.id}>
+                  <td>{student.name}</td>
+                  <td>{student.grade || '-'}</td>
+                  <td>{student.requirements?.totalHours || '-'}</td>
+                  <td>{student.requirements?.coreHours || '-'}</td>
+                  <td>{student.requirements?.nonCoreHours || '-'}</td>
+                  <td>{student.requirements?.homeHours || '-'}</td>
+                  <td>{student.requirements?.awayHours || '-'}</td>
                   <td>
                     <button
                       className="btn btn-secondary"
-                      onClick={() => handleEdit(child)}
+                      onClick={() => handleEdit(student)}
                       style={{ fontSize: '12px', padding: '5px 10px' }}
                     >
                       Edit Requirements
@@ -245,9 +245,9 @@ const Settings: React.FC = () => {
         )}
       </div>
 
-      {editingChild && (
+      {editingStudent && (
         <div className="card">
-          <h3>Set Requirements for {editingChild.name}</h3>
+          <h3>Set Requirements for {editingStudent.name}</h3>
           <p className="text-muted" style={{ marginBottom: '20px' }}>
             Enter the required hours for the school year. Leave blank if no requirement.
           </p>

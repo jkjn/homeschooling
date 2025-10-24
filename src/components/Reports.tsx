@@ -3,7 +3,7 @@ import { useAppState } from '../hooks/useAppState';
 
 const Reports: React.FC = () => {
   const { state } = useAppState();
-  const [selectedChild, setSelectedChild] = useState<string>('all');
+  const [selectedStudent, setSelectedChild] = useState<string>('all');
   const [dateRange, setDateRange] = useState<string>('week');
   const [selectedSchoolYear, setSelectedSchoolYear] = useState<number>(() => {
     // Default to current school year
@@ -72,13 +72,13 @@ const Reports: React.FC = () => {
   const filteredEntries = useMemo(() => {
     const dateFilter = getDateFilter();
     return state.timeEntries.filter(entry => {
-      const matchesChild = selectedChild === 'all' || entry.childId === selectedChild;
+      const matchesStudent = selectedStudent === 'all' || entry.studentId === selectedStudent;
       const matchesDate = dateFilter(entry.date);
-      return matchesChild && matchesDate;
+      return matchesStudent && matchesDate;
     });
-  }, [state.timeEntries, selectedChild, dateRange, selectedSchoolYear]);
+  }, [state.timeEntries, selectedStudent, dateRange, selectedSchoolYear]);
 
-  const summaryByChild = useMemo(() => {
+  const summaryByStudent = useMemo(() => {
     const summary: Record<string, {
       totalMinutes: number;
       subjects: Record<string, number>;
@@ -90,8 +90,8 @@ const Reports: React.FC = () => {
     }> = {};
 
     filteredEntries.forEach(entry => {
-      if (!summary[entry.childId]) {
-        summary[entry.childId] = {
+      if (!summary[entry.studentId]) {
+        summary[entry.studentId] = {
           totalMinutes: 0,
           subjects: {},
           coreMinutes: 0,
@@ -106,27 +106,27 @@ const Reports: React.FC = () => {
       const category = subject?.category || 'Core';
       const location = entry.location || 'Home';
 
-      summary[entry.childId].totalMinutes += entry.duration;
-      summary[entry.childId].entryCount += 1;
+      summary[entry.studentId].totalMinutes += entry.duration;
+      summary[entry.studentId].entryCount += 1;
 
       // Track by category
       if (category === 'Core') {
-        summary[entry.childId].coreMinutes += entry.duration;
+        summary[entry.studentId].coreMinutes += entry.duration;
       } else {
-        summary[entry.childId].nonCoreMinutes += entry.duration;
+        summary[entry.studentId].nonCoreMinutes += entry.duration;
       }
 
       // Track by location
       if (location === 'Home') {
-        summary[entry.childId].homeMinutes += entry.duration;
+        summary[entry.studentId].homeMinutes += entry.duration;
       } else {
-        summary[entry.childId].awayMinutes += entry.duration;
+        summary[entry.studentId].awayMinutes += entry.duration;
       }
 
-      if (!summary[entry.childId].subjects[entry.subjectId]) {
-        summary[entry.childId].subjects[entry.subjectId] = 0;
+      if (!summary[entry.studentId].subjects[entry.subjectId]) {
+        summary[entry.studentId].subjects[entry.subjectId] = 0;
       }
-      summary[entry.childId].subjects[entry.subjectId] += entry.duration;
+      summary[entry.studentId].subjects[entry.subjectId] += entry.duration;
     });
 
     return summary;
@@ -145,9 +145,9 @@ const Reports: React.FC = () => {
     return summary;
   }, [filteredEntries]);
 
-  const getChildName = (childId: string) => {
-    const child = state.children.find(c => c.id === childId);
-    return child?.name || 'Unknown Child';
+  const getStudentName = (studentId: string) => {
+    const student = state.students.find(c => c.id === studentId);
+    return student?.name || 'Unknown Student';
   };
 
   const getSubjectName = (subjectId: string) => {
@@ -173,9 +173,9 @@ const Reports: React.FC = () => {
     return (minutes / 60).toFixed(1);
   };
 
-  const getChildRequirements = (childId: string) => {
-    const child = state.children.find(c => c.id === childId);
-    return child?.requirements;
+  const getStudentRequirements = (studentId: string) => {
+    const student = state.students.find(c => c.id === studentId);
+    return student?.requirements;
   };
 
   const totalMinutes = filteredEntries.reduce((sum, entry) => sum + entry.duration, 0);
@@ -199,16 +199,16 @@ const Reports: React.FC = () => {
         
         <div className={`grid ${dateRange === 'schoolYear' ? 'grid-3' : 'grid-2'}`} style={{ marginBottom: '20px' }}>
           <div className="form-group">
-            <label>Filter by Child</label>
+            <label>Filter by Student</label>
             <select
               className="form-control"
-              value={selectedChild}
+              value={selectedStudent}
               onChange={(e) => setSelectedChild(e.target.value)}
             >
-              <option value="all">All Children</option>
-              {state.children.map((child) => (
-                <option key={child.id} value={child.id}>
-                  {child.name}
+              <option value="all">All Students</option>
+              {state.students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name}
                 </option>
               ))}
             </select>
@@ -255,9 +255,9 @@ const Reports: React.FC = () => {
         <div style={{ padding: '15px', background: 'var(--bg-tertiary)', borderRadius: '4px', marginBottom: '20px' }}>
           <h3 style={{ marginBottom: '10px', color: 'var(--text-primary)' }}>
             Summary for {getDateRangeLabel()}
-            {selectedChild !== 'all' && ` - ${getChildName(selectedChild)}`}
+            {selectedStudent !== 'all' && ` - ${getStudentName(selectedStudent)}`}
           </h3>
-          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#007bff' }}>
+          <p style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
             Total Time: {formatDuration(totalMinutes)}
           </p>
           <p style={{ color: 'var(--text-muted)' }}>
@@ -266,28 +266,28 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {Object.keys(summaryByChild).length > 0 && (
+      {Object.keys(summaryByStudent).length > 0 && (
         <div className="grid grid-2">
-          {Object.entries(summaryByChild).map(([childId, stats]) => {
-            const child = state.children.find(c => c.id === childId);
-            if (!child) return null;
+          {Object.entries(summaryByStudent).map(([studentId, stats]) => {
+            const student = state.students.find(s => s.id === studentId);
+            if (!student) return null;
 
             return (
-              <div key={childId} className="card">
-                <div style={{ borderLeft: '4px solid #007bff', paddingLeft: '15px', marginBottom: '15px' }}>
+              <div key={studentId} className="card">
+                <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '15px', marginBottom: '15px' }}>
                   <h3 style={{ marginBottom: '5px', color: 'var(--text-primary)' }}>
-                    {child.name}
+                    {student.name}
                   </h3>
-                  {child.grade && (
+                  {student.grade && (
                     <p className="text-muted" style={{ fontSize: '14px', margin: 0 }}>
-                      Grade: {child.grade}
+                      Grade: {student.grade}
                     </p>
                   )}
                 </div>
 
                 {/* Progress Tracking Section */}
                 {(() => {
-                  const requirements = getChildRequirements(childId);
+                  const requirements = getStudentRequirements(studentId);
                   const hasRequirements = requirements && (
                     requirements.totalHours ||
                     requirements.coreHours ||
@@ -309,7 +309,7 @@ const Reports: React.FC = () => {
                       actual,
                       required,
                       percentage,
-                      color: '#007bff'
+                      color: 'var(--accent-primary)'
                     });
                   }
 
@@ -322,7 +322,7 @@ const Reports: React.FC = () => {
                       actual,
                       required,
                       percentage,
-                      color: '#007bff'
+                      color: 'var(--accent-secondary)'
                     });
                   }
 
@@ -335,7 +335,7 @@ const Reports: React.FC = () => {
                       actual,
                       required,
                       percentage,
-                      color: '#6c757d'
+                      color: 'var(--accent-warning)'
                     });
                   }
 
@@ -348,7 +348,7 @@ const Reports: React.FC = () => {
                       actual,
                       required,
                       percentage,
-                      color: '#28a745'
+                      color: 'var(--accent-success)'
                     });
                   }
 
@@ -361,7 +361,7 @@ const Reports: React.FC = () => {
                       actual,
                       required,
                       percentage,
-                      color: '#17a2b8'
+                      color: 'var(--accent-info)'
                     });
                   }
 
@@ -413,7 +413,7 @@ const Reports: React.FC = () => {
                 })()}
 
                 {/* Divider */}
-                {getChildRequirements(childId) && (
+                {getStudentRequirements(studentId) && (
                   <div style={{
                     borderTop: '1px solid var(--border-color)',
                     marginBottom: '20px'
@@ -430,7 +430,7 @@ const Reports: React.FC = () => {
                       padding: '12px',
                       background: 'var(--bg-tertiary)',
                       borderRadius: '8px',
-                      borderLeft: '4px solid #007bff'
+                      borderLeft: '4px solid var(--accent-secondary)'
                     }}>
                       <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                         Core
@@ -446,7 +446,7 @@ const Reports: React.FC = () => {
                       padding: '12px',
                       background: 'var(--bg-tertiary)',
                       borderRadius: '8px',
-                      borderLeft: '4px solid #6c757d'
+                      borderLeft: '4px solid var(--accent-warning)'
                     }}>
                       <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                         Non-Core
@@ -471,7 +471,7 @@ const Reports: React.FC = () => {
                       padding: '12px',
                       background: 'var(--bg-tertiary)',
                       borderRadius: '8px',
-                      borderLeft: '4px solid #28a745'
+                      borderLeft: '4px solid var(--accent-success)'
                     }}>
                       <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                         Home
@@ -487,7 +487,7 @@ const Reports: React.FC = () => {
                       padding: '12px',
                       background: 'var(--bg-tertiary)',
                       borderRadius: '8px',
-                      borderLeft: '4px solid #17a2b8'
+                      borderLeft: '4px solid var(--accent-info)'
                     }}>
                       <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>
                         Away

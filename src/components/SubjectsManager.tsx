@@ -12,10 +12,13 @@ const SubjectsManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [formData, setFormData] = useState({ name: '', color: PRESET_COLORS[0], category: 'Core' as 'Core' | 'Non-Core' });
+  const [assignedStudents, setAssignedStudents] = useState<Set<string>>(new Set());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
+
+    let subjectId: string;
 
     if (editingSubject) {
       dispatch({
@@ -23,21 +26,61 @@ const SubjectsManager: React.FC = () => {
         id: editingSubject.id,
         updates: formData
       });
+      subjectId = editingSubject.id;
       setEditingSubject(null);
     } else {
+      // For new subjects, we need to generate an ID first
+      // We'll dispatch the action and use the generated ID
+      const tempId = Date.now().toString(36) + Math.random().toString(36).substr(2);
       dispatch({
         type: 'ADD_SUBJECT',
         subject: formData
       });
+      // The subject will be added with a generated ID by the reducer
+      // We need to get the most recent subject
+      subjectId = tempId; // This will be handled below
     }
-    
+
+    // Update assigned students' subjectCurriculum
+    if (assignedStudents.size > 0) {
+      // For new subjects, we need to wait for the state to update
+      // Use setTimeout to ensure the subject is added first
+      setTimeout(() => {
+        const actualSubjectId = editingSubject ? subjectId : state.subjects[state.subjects.length - 1]?.id;
+        if (actualSubjectId) {
+          assignedStudents.forEach(studentId => {
+            const student = state.students.find(s => s.id === studentId);
+            if (student) {
+              const updatedCurriculum = {
+                ...student.subjectCurriculum,
+                [actualSubjectId]: student.subjectCurriculum?.[actualSubjectId] || {}
+              };
+              dispatch({
+                type: 'UPDATE_STUDENT',
+                id: studentId,
+                updates: { subjectCurriculum: updatedCurriculum }
+              });
+            }
+          });
+        }
+      }, 0);
+    }
+
     setFormData({ name: '', color: PRESET_COLORS[0], category: 'Core' });
+    setAssignedStudents(new Set());
     setShowForm(false);
   };
 
   const handleEdit = (subject: Subject) => {
     setEditingSubject(subject);
     setFormData({ name: subject.name, color: subject.color || PRESET_COLORS[0], category: subject.category });
+
+    // Load which students have this subject assigned
+    const studentsWithSubject = state.students.filter(student =>
+      student.subjectCurriculum && student.subjectCurriculum[subject.id]
+    ).map(student => student.id);
+    setAssignedStudents(new Set(studentsWithSubject));
+
     setShowForm(true);
   };
 
@@ -49,8 +92,21 @@ const SubjectsManager: React.FC = () => {
 
   const resetForm = () => {
     setFormData({ name: '', color: PRESET_COLORS[0], category: 'Core' });
+    setAssignedStudents(new Set());
     setEditingSubject(null);
     setShowForm(false);
+  };
+
+  const toggleStudentAssignment = (studentId: string) => {
+    setAssignedStudents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -112,7 +168,54 @@ const SubjectsManager: React.FC = () => {
               ))}
             </div>
           </div>
-          <div>
+
+          {/* Student Assignment Section */}
+          {state.students.length > 0 && (
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+              <h4 style={{ marginBottom: '15px', color: 'var(--text-primary)', fontSize: '16px' }}>
+                Assign to Students (Optional)
+              </h4>
+              <p className="text-muted" style={{ fontSize: '13px', marginBottom: '15px' }}>
+                Select students to automatically assign this subject to their curriculum.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                {state.students.map((student) => (
+                  <label
+                    key={student.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '10px',
+                      background: assignedStudents.has(student.id) ? 'var(--hover-bg)' : 'transparent',
+                      border: `1px solid ${assignedStudents.has(student.id) ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={assignedStudents.has(student.id)}
+                      onChange={() => toggleStudentAssignment(student.id)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>
+                        {student.name}
+                      </div>
+                      {student.grade && (
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Grade: {student.grade}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginTop: '20px' }}>
             <button type="submit" className="btn btn-primary mr-2">
               {editingSubject ? 'Update' : 'Add'}
             </button>
@@ -141,14 +244,7 @@ const SubjectsManager: React.FC = () => {
               <tr key={subject.id}>
                 <td>{subject.name}</td>
                 <td>
-                  <span style={{
-                    padding: '2px 8px',
-                    backgroundColor: (subject.category || 'Core') === 'Core' ? '#007bff' : '#6c757d',
-                    color: 'white',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600'
-                  }}>
+                  <span className={(subject.category || 'Core') === 'Core' ? 'badge badge-primary' : 'badge badge-info'}>
                     {subject.category || 'Core'}
                   </span>
                 </td>

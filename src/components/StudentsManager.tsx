@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
-import { Child } from '../types';
+import { Student } from '../types';
 
 const GRADE_OPTIONS = [
   'Preschool',
@@ -19,10 +19,10 @@ const GRADE_OPTIONS = [
   '12th'
 ];
 
-const ChildrenManager: React.FC = () => {
+const StudentsManager: React.FC = () => {
   const { state, dispatch } = useAppState();
   const [showForm, setShowForm] = useState(false);
-  const [editingChild, setEditingChild] = useState<Child | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [formData, setFormData] = useState({ name: '', grade: '' });
   const [subjectCurriculum, setSubjectCurriculum] = useState<{
     [subjectId: string]: {
@@ -36,30 +36,30 @@ const ChildrenManager: React.FC = () => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    let childData: any = {
+    let studentData: any = {
       ...formData,
       subjectCurriculum: Object.keys(subjectCurriculum).length > 0 ? subjectCurriculum : undefined
     };
 
-    // For new children, inherit requirements from existing children if available
-    if (!editingChild && state.children.length > 0) {
-      const existingChild = state.children[0];
-      if (existingChild.requirements) {
-        childData.requirements = { ...existingChild.requirements };
+    // For new students, inherit requirements from existing students if available
+    if (!editingStudent && state.students.length > 0) {
+      const existingStudent = state.students[0];
+      if (existingStudent.requirements) {
+        studentData.requirements = { ...existingStudent.requirements };
       }
     }
 
-    if (editingChild) {
+    if (editingStudent) {
       dispatch({
-        type: 'UPDATE_CHILD',
-        id: editingChild.id,
-        updates: childData
+        type: 'UPDATE_STUDENT',
+        id: editingStudent.id,
+        updates: studentData
       });
       setEditingChild(null);
     } else {
       dispatch({
-        type: 'ADD_CHILD',
-        child: childData
+        type: 'ADD_STUDENT',
+        student: studentData
       });
     }
 
@@ -68,23 +68,23 @@ const ChildrenManager: React.FC = () => {
     setShowForm(false);
   };
 
-  const handleEdit = (child: Child) => {
-    setEditingChild(child);
-    setFormData({ name: child.name, grade: child.grade || '' });
-    setSubjectCurriculum(child.subjectCurriculum || {});
+  const handleEdit = (student: Student) => {
+    setEditingStudent(student);
+    setFormData({ name: student.name, grade: student.grade || '' });
+    setSubjectCurriculum(student.subjectCurriculum || {});
     setShowForm(true);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this child? All their time entries will also be deleted.')) {
-      dispatch({ type: 'DELETE_CHILD', id });
+    if (window.confirm('Are you sure you want to delete this student? All their time entries will also be deleted.')) {
+      dispatch({ type: 'DELETE_STUDENT', id });
     }
   };
 
   const resetForm = () => {
     setFormData({ name: '', grade: '' });
     setSubjectCurriculum({});
-    setEditingChild(null);
+    setEditingStudent(null);
     setShowForm(false);
   };
 
@@ -112,18 +112,18 @@ const ChildrenManager: React.FC = () => {
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Children</h2>
-        <button 
-          className="btn btn-primary" 
+        <h2>Students</h2>
+        <button
+          className="btn btn-primary"
           onClick={() => setShowForm(true)}
         >
-          Add Child
+          Add Student
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '15px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-          <h3>{editingChild ? 'Edit Child' : 'Add New Child'}</h3>
+          <h3>{editingStudent ? 'Edit Student' : 'Add New Student'}</h3>
           <div className="form-group">
             <label>Name</label>
             <input
@@ -186,14 +186,7 @@ const ChildrenManager: React.FC = () => {
                         <h5 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>
                           {subject.name}
                         </h5>
-                        <span style={{
-                          padding: '2px 6px',
-                          backgroundColor: subject.category === 'Core' ? '#007bff' : '#6c757d',
-                          color: 'white',
-                          borderRadius: '3px',
-                          fontSize: '10px',
-                          fontWeight: '600'
-                        }}>
+                        <span className={subject.category === 'Core' ? 'badge badge-primary' : 'badge badge-info'}>
                           {subject.category}
                         </span>
                       </div>
@@ -244,7 +237,7 @@ const ChildrenManager: React.FC = () => {
 
           <div style={{ marginTop: '20px' }}>
             <button type="submit" className="btn btn-primary mr-2">
-              {editingChild ? 'Update' : 'Add'}
+              {editingStudent ? 'Update' : 'Add'}
             </button>
             <button type="button" className="btn btn-secondary" onClick={resetForm}>
               Cancel
@@ -253,8 +246,8 @@ const ChildrenManager: React.FC = () => {
         </form>
       )}
 
-      {state.children.length === 0 ? (
-        <p className="text-muted text-center">No children added yet. Click "Add Child" to get started.</p>
+      {state.students.length === 0 ? (
+        <p className="text-muted text-center">No students added yet. Click "Add Student" to get started.</p>
       ) : (
         <table className="table">
           <thead>
@@ -267,41 +260,34 @@ const ChildrenManager: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {state.children.map((child) => {
-              const assignedCount = child.subjectCurriculum ? Object.keys(child.subjectCurriculum).length : 0;
+            {state.students.map((student) => {
+              const assignedCount = student.subjectCurriculum ? Object.keys(student.subjectCurriculum).length : 0;
 
               return (
-                <tr key={child.id}>
-                  <td>{child.name}</td>
-                  <td>{child.grade || '-'}</td>
+                <tr key={student.id}>
+                  <td>{student.name}</td>
+                  <td>{student.grade || '-'}</td>
                   <td>
                     {assignedCount > 0 ? (
-                      <span style={{
-                        padding: '2px 8px',
-                        backgroundColor: '#28a745',
-                        color: 'white',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600'
-                      }}>
+                      <span className="badge badge-success">
                         {assignedCount} {assignedCount === 1 ? 'subject' : 'subjects'}
                       </span>
                     ) : (
                       <span className="text-muted">None</span>
                     )}
                   </td>
-                  <td>{child.createdAt.toLocaleDateString()}</td>
+                  <td>{student.createdAt.toLocaleDateString()}</td>
                   <td>
                     <button
                       className="btn btn-secondary mr-2"
-                      onClick={() => handleEdit(child)}
+                      onClick={() => handleEdit(student)}
                       style={{ fontSize: '12px', padding: '5px 10px' }}
                     >
                       Edit
                     </button>
                     <button
                       className="btn btn-danger"
-                      onClick={() => handleDelete(child.id)}
+                      onClick={() => handleDelete(student.id)}
                       style={{ fontSize: '12px', padding: '5px 10px' }}
                     >
                       Delete
@@ -317,4 +303,4 @@ const ChildrenManager: React.FC = () => {
   );
 };
 
-export default ChildrenManager;
+export default StudentsManager;

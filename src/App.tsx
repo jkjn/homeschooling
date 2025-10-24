@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { AppProvider } from './hooks/useAppState';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Dashboard from './components/Dashboard';
-import ChildrenManager from './components/ChildrenManager';
+import StudentsManager from './components/StudentsManager';
 import SubjectsManager from './components/SubjectsManager';
 import TimeTracker from './components/TimeTracker';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
 import ThemeToggle from './components/ThemeToggle';
 
-type TabType = 'dashboard' | 'tracker' | 'children' | 'subjects' | 'reports' | 'settings';
+type TabType = 'dashboard' | 'tracker' | 'students' | 'subjects' | 'reports' | 'settings';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -20,8 +20,8 @@ const App: React.FC = () => {
         return <Dashboard />;
       case 'tracker':
         return <TimeTracker />;
-      case 'children':
-        return <ChildrenManager />;
+      case 'students':
+        return <StudentsManager />;
       case 'subjects':
         return <SubjectsManager />;
       case 'reports':
@@ -42,7 +42,7 @@ const App: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h1>Homeschool Time Tracker</h1>
-                  <p>Keep track of learning hours by subject and child</p>
+                  <p>Keep track of learning hours by subject and student</p>
                 </div>
                 <ThemeToggle />
               </div>
@@ -61,10 +61,10 @@ const App: React.FC = () => {
                   Time Tracker
                 </button>
                 <button
-                  className={`nav-link ${activeTab === 'children' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('children')}
+                  className={`nav-link ${activeTab === 'students' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('students')}
                 >
-                  Children
+                  Students
                 </button>
                 <button
                   className={`nav-link ${activeTab === 'subjects' ? 'active' : ''}`}

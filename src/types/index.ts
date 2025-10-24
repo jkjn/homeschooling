@@ -1,4 +1,4 @@
-export interface Child {
+export interface Student {
   id: string;
   name: string;
   grade?: string;
@@ -29,7 +29,7 @@ export interface Subject {
 
 export interface TimeEntry {
   id: string;
-  childId: string;
+  studentId: string;
   subjectId: string;
   date: Date;
   startTime?: Date;
@@ -41,7 +41,7 @@ export interface TimeEntry {
 }
 
 export interface AppState {
-  children: Child[];
+  students: Student[];
   subjects: Subject[];
   timeEntries: TimeEntry[];
 }
