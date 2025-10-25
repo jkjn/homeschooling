@@ -35,7 +35,7 @@ const Settings: React.FC = () => {
     if (!editingStudent) return;
 
     dispatch({
-      type: 'UPDATE_CHILD',
+      type: 'UPDATE_STUDENT',
       id: editingStudent.id,
       updates: {
         requirements: {

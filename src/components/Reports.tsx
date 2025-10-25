@@ -3,13 +3,16 @@ import { useAppState } from '../hooks/useAppState';
 
 const Reports: React.FC = () => {
   const { state } = useAppState();
-  const [selectedStudent, setSelectedChild] = useState<string>('all');
+  const [selectedStudent, setSelectedStudent] = useState<string>('all');
   const [dateRange, setDateRange] = useState<string>('week');
   const [selectedSchoolYear, setSelectedSchoolYear] = useState<number>(() => {
     // Default to current school year
     const now = new Date();
     return now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
   });
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Get all available school years from the data
   const availableSchoolYears = useMemo(() => {
@@ -192,6 +195,41 @@ const Reports: React.FC = () => {
     }
   };
 
+  // Calendar helper functions
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month, 1).getDay();
+  };
+
+  const getEntriesForDate = (date: Date) => {
+    return state.timeEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate.toDateString() === date.toDateString() &&
+        (selectedStudent === 'all' || entry.studentId === selectedStudent);
+    });
+  };
+
+  const handleDateClick = (day: number) => {
+    const clickedDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
+    setSelectedDate(clickedDate);
+  };
+
+  const changeMonth = (direction: number) => {
+    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + direction, 1));
+  };
+
+  const selectedDateEntries = useMemo(() => {
+    if (!selectedDate) return [];
+    return getEntriesForDate(selectedDate);
+  }, [selectedDate, state.timeEntries, selectedStudent]);
+
   return (
     <div>
       <div className="card">
@@ -203,7 +241,7 @@ const Reports: React.FC = () => {
             <select
               className="form-control"
               value={selectedStudent}
-              onChange={(e) => setSelectedChild(e.target.value)}
+              onChange={(e) => setSelectedStudent(e.target.value)}
             >
               <option value="all">All Students</option>
               {state.students.map((student) => (
@@ -264,7 +302,172 @@ const Reports: React.FC = () => {
             {filteredEntries.length} time {filteredEntries.length === 1 ? 'entry' : 'entries'}
           </p>
         </div>
+
+        {/* Calendar Toggle */}
+        <div style={{ marginTop: '20px' }}>
+          <button
+            className={`btn ${showCalendar ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setShowCalendar(!showCalendar)}
+          >
+            📅 {showCalendar ? 'Hide' : 'Show'} Calendar View
+          </button>
+        </div>
       </div>
+
+      {/* Calendar View */}
+      {showCalendar && (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3>Calendar View</h3>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => changeMonth(-1)}>
+                ‹ Prev
+              </button>
+              <h4 style={{ margin: 0, minWidth: '150px', textAlign: 'center' }}>
+                {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h4>
+              <button className="btn btn-secondary" onClick={() => changeMonth(1)}>
+                Next ›
+              </button>
+            </div>
+          </div>
+
+          {/* Calendar Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: '5px',
+            marginBottom: '20px'
+          }}>
+            {/* Day headers */}
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} style={{
+                padding: '10px',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: '12px',
+                color: 'var(--text-secondary)'
+              }}>
+                {day}
+              </div>
+            ))}
+
+            {/* Empty cells for days before month starts */}
+            {Array.from({ length: getFirstDayOfMonth(calendarDate) }).map((_, index) => (
+              <div key={`empty-${index}`} />
+            ))}
+
+            {/* Calendar days */}
+            {Array.from({ length: getDaysInMonth(calendarDate) }).map((_, index) => {
+              const day = index + 1;
+              const currentDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
+              const entriesForDay = getEntriesForDate(currentDate);
+              const isSelected = selectedDate?.toDateString() === currentDate.toDateString();
+              const isToday = currentDate.toDateString() === new Date().toDateString();
+
+              return (
+                <div
+                  key={day}
+                  onClick={() => handleDateClick(day)}
+                  style={{
+                    padding: '10px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    borderRadius: '8px',
+                    border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    background: isSelected
+                      ? 'var(--accent-primary)'
+                      : entriesForDay.length > 0
+                      ? 'var(--hover-bg)'
+                      : 'var(--bg-secondary)',
+                    color: isSelected ? 'white' : 'var(--text-primary)',
+                    fontWeight: isToday ? 'bold' : 'normal',
+                    position: 'relative',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div>{day}</div>
+                  {entriesForDay.length > 0 && (
+                    <div style={{
+                      fontSize: '10px',
+                      marginTop: '2px',
+                      color: isSelected ? 'white' : 'var(--accent-success)'
+                    }}>
+                      {entriesForDay.length} {entriesForDay.length === 1 ? 'entry' : 'entries'}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Selected Date Details */}
+          {selectedDate && selectedDateEntries.length > 0 && (
+            <div style={{
+              padding: '15px',
+              background: 'var(--bg-tertiary)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)'
+            }}>
+              <h4 style={{ marginBottom: '15px' }}>
+                Entries for {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {selectedDateEntries.map(entry => {
+                  const student = state.students.find(s => s.id === entry.studentId);
+                  const subject = state.subjects.find(s => s.id === entry.subjectId);
+
+                  return (
+                    <div
+                      key={entry.id}
+                      style={{
+                        padding: '12px',
+                        background: 'var(--bg-secondary)',
+                        borderRadius: '8px',
+                        borderLeft: `4px solid ${subject?.color || '#ccc'}`
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <div>
+                          <strong style={{ color: 'var(--text-primary)' }}>
+                            {student?.name} - {subject?.name}
+                          </strong>
+                          {entry.isRecurring && (
+                            <span className="badge badge-pink" style={{ marginLeft: '8px' }}>
+                              🔁 Recurring
+                            </span>
+                          )}
+                        </div>
+                        <span className="badge badge-success">
+                          {formatDuration(entry.duration)}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        <span className="badge badge-info" style={{ marginRight: '5px' }}>
+                          {entry.location || 'Home'}
+                        </span>
+                        {entry.notes && <span>{entry.notes}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {selectedDate && selectedDateEntries.length === 0 && (
+            <div style={{
+              padding: '15px',
+              background: 'var(--bg-tertiary)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: 'var(--text-muted)'
+            }}>
+              No entries for {selectedDate.toLocaleDateString()}
+            </div>
+          )}
+        </div>
+      )}
 
       {Object.keys(summaryByStudent).length > 0 && (
         <div className="grid grid-2">

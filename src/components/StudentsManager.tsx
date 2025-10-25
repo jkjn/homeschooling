@@ -55,7 +55,7 @@ const StudentsManager: React.FC = () => {
         id: editingStudent.id,
         updates: studentData
       });
-      setEditingChild(null);
+      setEditingStudent(null);
     } else {
       dispatch({
         type: 'ADD_STUDENT',

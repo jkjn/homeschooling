@@ -37,6 +37,12 @@ export interface TimeEntry {
   duration: number; // in minutes
   location: 'Home' | 'Away';
   notes?: string;
+  tags?: string[]; // Custom tags for categorizing entries
+  isRecurring?: boolean;
+  recurringPattern?: 'none' | 'daily-weekdays' | 'weekly';
+  recurringDay?: number; // 0-6 for Sunday-Saturday (only for weekly)
+  recurringSeriesId?: string; // Groups recurring entries together
+  recurringEndDate?: Date; // End date for recurring entries
   createdAt: Date;
 }
 

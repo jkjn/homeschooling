@@ -83,15 +83,6 @@ const Dashboard: React.FC = () => {
     return stats;
   }, [schoolYearEntries, state.subjects]);
 
-  const totalMinutes = useMemo(() => {
-    return schoolYearEntries.reduce((sum, entry) => sum + entry.duration, 0);
-  }, [schoolYearEntries]);
-
-  const getStudentName = (studentId: string) => {
-    const child = state.students.find(c => c.id === studentId);
-    return child?.name || 'Unknown Child';
-  };
-
   const getStudentRequirements = (studentId: string) => {
     const child = state.students.find(c => c.id === studentId);
     return child?.requirements;
@@ -105,15 +96,6 @@ const Dashboard: React.FC = () => {
   const getSubjectColor = (subjectId: string) => {
     const subject = state.subjects.find(s => s.id === subjectId);
     return subject?.color || '#ccc';
-  };
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
   };
 
   const formatHoursDecimal = (minutes: number) => {
