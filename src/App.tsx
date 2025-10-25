@@ -13,6 +13,12 @@ type TabType = 'dashboard' | 'tracker' | 'students' | 'subjects' | 'reports' | '
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleTabClick = (tab: TabType) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false); // Close mobile menu when tab is selected
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -37,6 +43,15 @@ const App: React.FC = () => {
     <ThemeProvider>
       <AppProvider>
         <div>
+          {/* Mobile menu backdrop overlay */}
+          {mobileMenuOpen && (
+            <div
+              className="mobile-menu-backdrop"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
           <header className="header">
             <div className="container">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -44,43 +59,75 @@ const App: React.FC = () => {
                   <h1>Homeschool Time Tracker</h1>
                   <p>Keep track of learning hours by subject and student</p>
                 </div>
-                <ThemeToggle />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button
+                    className="mobile-menu-button"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle menu"
+                    aria-expanded={mobileMenuOpen}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      {mobileMenuOpen ? (
+                        <>
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </>
+                      ) : (
+                        <>
+                          <line x1="3" y1="12" x2="21" y2="12"></line>
+                          <line x1="3" y1="6" x2="21" y2="6"></line>
+                          <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </>
+                      )}
+                    </svg>
+                  </button>
+                  <ThemeToggle />
+                </div>
               </div>
 
-              <nav className="nav">
+              <nav className={`nav ${mobileMenuOpen ? 'nav-mobile-open' : ''}`}>
                 <button
                   className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('dashboard')}
+                  onClick={() => handleTabClick('dashboard')}
                 >
                   Dashboard
                 </button>
                 <button
                   className={`nav-link ${activeTab === 'tracker' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('tracker')}
+                  onClick={() => handleTabClick('tracker')}
                 >
                   Time Tracker
                 </button>
                 <button
                   className={`nav-link ${activeTab === 'students' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('students')}
+                  onClick={() => handleTabClick('students')}
                 >
                   Students
                 </button>
                 <button
                   className={`nav-link ${activeTab === 'subjects' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('subjects')}
+                  onClick={() => handleTabClick('subjects')}
                 >
                   Subjects
                 </button>
                 <button
                   className={`nav-link ${activeTab === 'reports' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('reports')}
+                  onClick={() => handleTabClick('reports')}
                 >
                   Reports
                 </button>
                 <button
                   className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('settings')}
+                  onClick={() => handleTabClick('settings')}
                 >
                   Settings
                 </button>

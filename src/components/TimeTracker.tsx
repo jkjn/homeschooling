@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import { TimeEntry } from '../types';
 import { parseLocalDate } from '../utils/storage';
@@ -140,8 +140,10 @@ const TimeTracker: React.FC = () => {
   const [keepFormOpen, setKeepFormOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
-  const [showBulkTagEdit, setShowBulkTagEdit] = useState(false);
+  const [showTagManagement, setShowTagManagement] = useState(false);
+  const [tagManagementMode, setTagManagementMode] = useState<'add' | 'replace' | 'remove'>('add');
   const [bulkTagInput, setBulkTagInput] = useState('');
+  const masterCheckboxRef = useRef<HTMLInputElement>(null);
   const [filters, setFilters] = useState({
     schoolYear: getCurrentSchoolYear(),
     student: 'all',
@@ -424,31 +426,42 @@ const TimeTracker: React.FC = () => {
   const handleBulkTagEdit = () => {
     if (selectedEntries.size === 0) return;
 
-    // Parse the new tags
-    const newTags = bulkTagInput
+    // Parse the input tags
+    const inputTags = bulkTagInput
       ? bulkTagInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
       : [];
 
     selectedEntries.forEach(id => {
       const entry = state.timeEntries.find(e => e.id === id);
       if (entry) {
-        // Merge with existing tags, avoiding duplicates
         const existingTags = entry.tags || [];
-        const mergedTags = [...new Set([...existingTags, ...newTags])];
+        let updatedTags: string[] | undefined;
+
+        if (tagManagementMode === 'add') {
+          // Add new tags, merge with existing, avoid duplicates
+          updatedTags = [...new Set([...existingTags, ...inputTags])];
+        } else if (tagManagementMode === 'replace') {
+          // Replace all tags with new tags
+          updatedTags = inputTags;
+        } else if (tagManagementMode === 'remove') {
+          // Remove specified tags from existing tags
+          updatedTags = existingTags.filter(tag => !inputTags.includes(tag));
+        }
 
         dispatch({
           type: 'UPDATE_TIME_ENTRY',
           id,
           updates: {
-            tags: mergedTags.length > 0 ? mergedTags : undefined
+            tags: updatedTags && updatedTags.length > 0 ? updatedTags : undefined
           }
         });
       }
     });
 
     setSelectedEntries(new Set());
-    setShowBulkTagEdit(false);
+    setShowTagManagement(false);
     setBulkTagInput('');
+    setTagManagementMode('add');
   };
 
   const getStudentName = (studentId: string) => {
@@ -534,6 +547,14 @@ const TimeTracker: React.FC = () => {
   const sortedEntries = [...filteredEntries].sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+
+  // Update master checkbox indeterminate state
+  useEffect(() => {
+    if (masterCheckboxRef.current) {
+      const isIndeterminate = selectedEntries.size > 0 && selectedEntries.size < sortedEntries.length;
+      masterCheckboxRef.current.indeterminate = isIndeterminate;
+    }
+  }, [selectedEntries.size, sortedEntries.length]);
 
   const canAddEntry = state.students.length > 0 && state.subjects.length > 0;
 
@@ -868,14 +889,14 @@ const TimeTracker: React.FC = () => {
 
             {selectedEntries.size > 0 && (
               <div style={{ display: 'flex', gap: '8px' }}>
-                {!showBulkTagEdit ? (
+                {!showTagManagement ? (
                   <>
                     <button
                       className="btn btn-primary"
-                      onClick={() => setShowBulkTagEdit(true)}
+                      onClick={() => setShowTagManagement(true)}
                       style={{ fontSize: '13px', padding: '6px 12px' }}
                     >
-                      Add Tags
+                      Manage Tags
                     </button>
                     <button
                       className="btn btn-danger"
@@ -893,13 +914,27 @@ const TimeTracker: React.FC = () => {
                     </button>
                   </>
                 ) : (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <select
+                      className="form-control"
+                      value={tagManagementMode}
+                      onChange={(e) => setTagManagementMode(e.target.value as 'add' | 'replace' | 'remove')}
+                      style={{ fontSize: '13px', padding: '6px 10px', width: 'auto' }}
+                    >
+                      <option value="add">Add Tags</option>
+                      <option value="replace">Replace Tags</option>
+                      <option value="remove">Remove Tags</option>
+                    </select>
                     <input
                       type="text"
                       className="form-control"
                       value={bulkTagInput}
                       onChange={(e) => setBulkTagInput(e.target.value)}
-                      placeholder="e.g., Review, Important"
+                      placeholder={
+                        tagManagementMode === 'add' ? 'e.g., Review, Important' :
+                        tagManagementMode === 'replace' ? 'e.g., New Tag' :
+                        'e.g., Old Tag, Outdated'
+                      }
                       style={{ fontSize: '13px', padding: '6px 10px', width: '250px' }}
                     />
                     <button
@@ -912,8 +947,9 @@ const TimeTracker: React.FC = () => {
                     <button
                       className="btn btn-secondary"
                       onClick={() => {
-                        setShowBulkTagEdit(false);
+                        setShowTagManagement(false);
                         setBulkTagInput('');
+                        setTagManagementMode('add');
                       }}
                       style={{ fontSize: '13px', padding: '6px 12px' }}
                     >
@@ -935,11 +971,13 @@ const TimeTracker: React.FC = () => {
           }
         </p>
       ) : (
-        <table className="table">
+        <div className="table-wrapper">
+          <table className="table">
           <thead>
             <tr>
               <th style={{ width: '40px' }}>
                 <input
+                  ref={masterCheckboxRef}
                   type="checkbox"
                   checked={selectedEntries.size === sortedEntries.length && sortedEntries.length > 0}
                   onChange={toggleSelectAll}
@@ -1138,6 +1176,7 @@ const TimeTracker: React.FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
