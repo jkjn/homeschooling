@@ -229,55 +229,126 @@ const SubjectsManager: React.FC = () => {
       {state.subjects.length === 0 ? (
         <p className="text-muted text-center">No subjects added yet. Click "Add Subject" to get started.</p>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th>Category</th>
-              <th>Color</th>
-              <th>Added</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop Table View */}
+          <div className="desktop-only">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Category</th>
+                  <th>Color</th>
+                  <th>Added</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.subjects.map((subject) => (
+                  <tr key={subject.id}>
+                    <td>{subject.name}</td>
+                    <td>
+                      <span className={(subject.category || 'Core') === 'Core' ? 'badge badge-primary' : 'badge badge-info'}>
+                        {subject.category || 'Core'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        backgroundColor: subject.color,
+                        borderRadius: '50%',
+                        border: '1px solid #ccc'
+                      }} />
+                    </td>
+                    <td>{subject.createdAt.toLocaleDateString()}</td>
+                    <td>
+                      <button
+                        className="btn btn-secondary mr-2"
+                        onClick={() => handleEdit(subject)}
+                        style={{ fontSize: '12px', padding: '5px 10px' }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(subject.id)}
+                        style={{ fontSize: '12px', padding: '5px 10px' }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="mobile-only-cards">
             {state.subjects.map((subject) => (
-              <tr key={subject.id}>
-                <td>{subject.name}</td>
-                <td>
-                  <span className={(subject.category || 'Core') === 'Core' ? 'badge badge-primary' : 'badge badge-info'}>
-                    {subject.category || 'Core'}
-                  </span>
-                </td>
-                <td>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    backgroundColor: subject.color,
-                    borderRadius: '50%',
-                    border: '1px solid #ccc'
-                  }} />
-                </td>
-                <td>{subject.createdAt.toLocaleDateString()}</td>
-                <td>
-                  <button 
-                    className="btn btn-secondary mr-2" 
+              <div
+                key={subject.id}
+                style={{
+                  padding: '15px',
+                  background: 'var(--bg-tertiary)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  borderLeft: `4px solid ${subject.color || '#ccc'}`
+                }}
+              >
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: subject.color || '#ccc',
+                        borderRadius: '50%',
+                        border: '1px solid var(--border-color)',
+                        flexShrink: 0
+                      }}
+                    />
+                    <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>
+                      {subject.name}
+                    </h3>
+                  </div>
+                  <div>
+                    <span className={(subject.category || 'Core') === 'Core' ? 'badge badge-primary' : 'badge badge-info'}>
+                      {subject.category || 'Core'}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{
+                  fontSize: '13px',
+                  color: 'var(--text-muted)',
+                  marginBottom: '12px',
+                  paddingBottom: '12px',
+                  borderBottom: '1px solid var(--border-color)'
+                }}>
+                  Added {subject.createdAt.toLocaleDateString()}
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn btn-secondary"
                     onClick={() => handleEdit(subject)}
-                    style={{ fontSize: '12px', padding: '5px 10px' }}
+                    style={{ flex: 1, fontSize: '14px', padding: '8px 12px' }}
                   >
                     Edit
                   </button>
-                  <button 
-                    className="btn btn-danger" 
+                  <button
+                    className="btn btn-danger"
                     onClick={() => handleDelete(subject.id)}
-                    style={{ fontSize: '12px', padding: '5px 10px' }}
+                    style={{ flex: 1, fontSize: '14px', padding: '8px 12px' }}
                   >
                     Delete
                   </button>
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );

@@ -24,6 +24,7 @@
   --accent-info: #78909C;
   --accent-danger: #37474F;
   --accent-pink: #90A4AE;
+  --accent-volunteer: #8E44AD;
   --gradient-primary: linear-gradient(135deg, #607D8B 0%, #455A64 100%);
   --gradient-light: linear-gradient(135deg, #B0BEC5 0%, #90A4AE 100%);
   --gradient-medium: linear-gradient(135deg, #78909C 0%, #607D8B 100%);
@@ -56,6 +57,7 @@
   --accent-info: #90A4AE;
   --accent-danger: #546E7A;
   --accent-pink: #B0BEC5;
+  --accent-volunteer: #BB8FCE;
   --gradient-primary: linear-gradient(135deg, #90A4AE 0%, #78909C 100%);
   --gradient-light: linear-gradient(135deg, #CFD8DC 0%, #B0BEC5 100%);
   --gradient-medium: linear-gradient(135deg, #B0BEC5 0%, #90A4AE 100%);
@@ -903,5 +905,34 @@ html {
   input[type="time"],
   select {
     font-size: 16px; /* Prevents zoom */
+  }
+}
+
+/* Responsive visibility utilities */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none !important;
+}
+
+.mobile-only-cards {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+
+  .mobile-only-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: 15px;
   }
 }

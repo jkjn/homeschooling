@@ -1,0 +1,42 @@
+{
+  "name": "homeschool-tracker-backend",
+  "version": "1.0.0",
+  "description": "Serverless backend for Homeschool Time Tracker",
+  "type": "module",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "deploy:function": "serverless deploy function --function",
+    "remove": "serverless remove",
+    "info": "serverless info",
+    "logs": "serverless logs --function",
+    "logs:tail": "serverless logs --tail --function",
+    "offline": "serverless offline",
+    "invoke:local": "serverless invoke local --function",
+    "invoke": "serverless invoke --function",
+    "package": "serverless package",
+    "validate": "serverless print"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.39.0",
+    "serverless-offline": "^13.3.3",
+    "serverless-plugin-log-retention": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "serverless",
+    "lambda",
+    "aws",
+    "homeschool",
+    "tracker"
+  ],
+  "author": "",
+  "license": "MIT"
+}

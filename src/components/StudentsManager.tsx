@@ -249,55 +249,126 @@ const StudentsManager: React.FC = () => {
       {state.students.length === 0 ? (
         <p className="text-muted text-center">No students added yet. Click "Add Student" to get started.</p>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Grade</th>
-              <th>Curriculum Assigned</th>
-              <th>Added</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop Table View */}
+          <div className="desktop-only">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Grade</th>
+                  <th>Curriculum Assigned</th>
+                  <th>Added</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.students.map((student) => {
+                  const assignedCount = student.subjectCurriculum ? Object.keys(student.subjectCurriculum).length : 0;
+
+                  return (
+                    <tr key={student.id}>
+                      <td>{student.name}</td>
+                      <td>{student.grade || '-'}</td>
+                      <td>
+                        {assignedCount > 0 ? (
+                          <span className="badge badge-success">
+                            {assignedCount} {assignedCount === 1 ? 'subject' : 'subjects'}
+                          </span>
+                        ) : (
+                          <span className="text-muted">None</span>
+                        )}
+                      </td>
+                      <td>{student.createdAt.toLocaleDateString()}</td>
+                      <td>
+                        <button
+                          className="btn btn-secondary mr-2"
+                          onClick={() => handleEdit(student)}
+                          style={{ fontSize: '12px', padding: '5px 10px' }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(student.id)}
+                          style={{ fontSize: '12px', padding: '5px 10px' }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="mobile-only-cards">
             {state.students.map((student) => {
               const assignedCount = student.subjectCurriculum ? Object.keys(student.subjectCurriculum).length : 0;
 
               return (
-                <tr key={student.id}>
-                  <td>{student.name}</td>
-                  <td>{student.grade || '-'}</td>
-                  <td>
-                    {assignedCount > 0 ? (
-                      <span className="badge badge-success">
-                        {assignedCount} {assignedCount === 1 ? 'subject' : 'subjects'}
-                      </span>
-                    ) : (
-                      <span className="text-muted">None</span>
-                    )}
-                  </td>
-                  <td>{student.createdAt.toLocaleDateString()}</td>
-                  <td>
+                <div
+                  key={student.id}
+                  style={{
+                    padding: '15px',
+                    background: 'var(--bg-tertiary)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)'
+                  }}
+                >
+                  <div style={{ marginBottom: '12px' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-primary)' }}>
+                      {student.name}
+                    </h3>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      {student.grade && (
+                        <span className="badge badge-info" style={{ fontSize: '12px' }}>
+                          Grade: {student.grade}
+                        </span>
+                      )}
+                      {assignedCount > 0 ? (
+                        <span className="badge badge-success" style={{ fontSize: '12px' }}>
+                          {assignedCount} {assignedCount === 1 ? 'subject' : 'subjects'}
+                        </span>
+                      ) : (
+                        <span className="text-muted" style={{ fontSize: '12px' }}>No subjects assigned</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    fontSize: '13px',
+                    color: 'var(--text-muted)',
+                    marginBottom: '12px',
+                    paddingBottom: '12px',
+                    borderBottom: '1px solid var(--border-color)'
+                  }}>
+                    Added {student.createdAt.toLocaleDateString()}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <button
-                      className="btn btn-secondary mr-2"
+                      className="btn btn-secondary"
                       onClick={() => handleEdit(student)}
-                      style={{ fontSize: '12px', padding: '5px 10px' }}
+                      style={{ flex: 1, fontSize: '14px', padding: '8px 12px' }}
                     >
                       Edit
                     </button>
                     <button
                       className="btn btn-danger"
                       onClick={() => handleDelete(student.id)}
-                      style={{ fontSize: '12px', padding: '5px 10px' }}
+                      style={{ flex: 1, fontSize: '14px', padding: '8px 12px' }}
                     >
                       Delete
                     </button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );

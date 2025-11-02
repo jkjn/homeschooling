@@ -10,7 +10,9 @@
       "Bash(npm install:*)",
       "Bash(npm test:*)",
       "Bash(test:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(firebase --version:*)",
+      "Bash(firebase deploy:*)"
     ],
     "deny": []
   }
